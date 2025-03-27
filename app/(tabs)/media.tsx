@@ -68,7 +68,7 @@ export default function MediaScreen() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/v1/media'); // Replace <YOUR-IP> if testing on device
+        const response = await axios.get('http://192.168.0.195:8080/api/v1/media'); // Replace <YOUR-IP> if testing on device
         setMedia(response.data.media || []);
       } catch (err) {
         console.error('Failed to fetch media:', err);

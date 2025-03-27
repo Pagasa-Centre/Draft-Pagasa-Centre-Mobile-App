@@ -62,7 +62,7 @@ export default function LocationsScreen() {
 
   const fetchOutreaches = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/outreach/');
+      const response = await axios.get('http://192.168.0.195:8080/api/v1/outreach/');
       setOutreaches(response.data.outreaches); // adjust based on actual response structure
     } catch (err) {
       console.error('Failed to fetch outreach locations:', err);
