@@ -1,7 +1,17 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking, ActivityIndicator } from 'react-native';
 import { Play, Bookmark, Share2 } from 'lucide-react-native';
+import axios from 'axios';
 
+type MediaItem = {
+  id: number;
+  title: string;
+  description: string;
+  youtube_video_id: string;
+  category: string;
+  published_at: string;
+  thumbnail_url: string;
+};
 const sermons = [
   {
     id: 1,
@@ -10,7 +20,7 @@ const sermons = [
     date: 'March 24, 2024',
     duration: '45:30',
     thumbnail: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?w=800',
-    series: 'Peace Series',
+    category: 'Peace Series',
   },
   {
     id: 2,
@@ -19,7 +29,7 @@ const sermons = [
     date: 'March 17, 2024',
     duration: '38:15',
     thumbnail: 'https://images.unsplash.com/photo-1445251836269-d158eaa028a6?w=800',
-    series: 'Prayer Warriors',
+    category: 'Prayer Warriors',
   },
   {
     id: 3,
@@ -28,14 +38,49 @@ const sermons = [
     date: 'March 10, 2024',
     duration: '42:00',
     thumbnail: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=800',
-    series: 'Faith Journey',
+    category: 'Faith Journey',
   },
 ];
 
-const categories = ['All', 'Sunday Service', 'Bible Study', 'Youth', 'Special Events'];
+const categories = ['All', 'Sunday Preachings', 'Bible Study', 'Evangelistic Nights'];
 
 export default function MediaScreen() {
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/media'); // Replace <YOUR-IP> if testing on device
+        setMedia(response.data.media || []);
+      } catch (err) {
+        console.error('Failed to fetch media:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMedia();
+  }, []);
+
+  const filteredMedia = selectedCategory === 'All'
+      ? media
+      : media.filter(item => item.category === selectedCategory);
+
+  const openYouTube = (videoId: string) => {
+    Linking.openURL(`https://www.youtube.com/watch?v=${videoId}`);
+  };
+
+  if (loading) {
+    return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+    );
+  }
+
+  const featured :MediaItem|undefined = media.find(item => item.category === 'Sunday Preachings');
 
   return (
     <ScrollView style={styles.container}>
@@ -44,8 +89,8 @@ export default function MediaScreen() {
         <Text style={styles.subtitle}>Watch and listen to our latest messages</Text>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.categoriesContainer}
         contentContainerStyle={styles.categoriesContent}>
@@ -68,38 +113,40 @@ export default function MediaScreen() {
         ))}
       </ScrollView>
 
-      <View style={styles.featuredContainer}>
-        <Text style={styles.sectionTitle}>Featured Series</Text>
-        <TouchableOpacity style={styles.featuredCard}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1490730141103-6cac27016106?w=800' }}
-            style={styles.featuredImage}
-          />
-          <View style={styles.featuredOverlay}>
-            <View style={styles.featuredContent}>
-              <Text style={styles.featuredTitle}>Living with Purpose</Text>
-              <Text style={styles.featuredSubtitle}>4-Part Series</Text>
-            </View>
-            <TouchableOpacity style={styles.playButton}>
-              <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
+      {featured && (
+          <View style={styles.featuredContainer}>
+            <Text style={styles.sectionTitle}>Featured Series</Text>
+            <TouchableOpacity style={styles.featuredCard}>
+              <Image
+                  source={{ uri: featured.thumbnail_url }}
+                  style={styles.featuredImage}
+              />
+              <View style={styles.featuredOverlay}>
+                <View style={styles.featuredContent}>
+                  <Text style={styles.featuredTitle}>{featured.title}</Text>
+                  <Text style={styles.featuredSubtitle}>Sunday Preachings</Text>
+                </View>
+                <TouchableOpacity style={styles.playButton} onPress={() => openYouTube(featured.youtube_video_id)}>
+                  <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </View>
+      )}
 
       <View style={styles.recentContainer}>
         <Text style={styles.sectionTitle}>Recent Messages</Text>
-        {sermons.map((sermon) => (
+        {filteredMedia.map((sermon) => (
           <TouchableOpacity key={sermon.id} style={styles.sermonCard}>
-            <Image source={{ uri: sermon.thumbnail }} style={styles.sermonThumbnail} />
+            <Image source={{ uri: sermon.thumbnail_url }} style={styles.sermonThumbnail} />
             <View style={styles.sermonInfo}>
               <Text style={styles.sermonTitle}>{sermon.title}</Text>
-              <Text style={styles.sermonDetails}>{sermon.pastor}</Text>
-              <Text style={styles.sermonDetails}>{sermon.date} • {sermon.duration}</Text>
-              <Text style={styles.seriesTag}>{sermon.series}</Text>
-              
+              <Text style={styles.sermonDetails}>{sermons[0].pastor}</Text>
+              <Text style={styles.sermonDetails}>{sermons[0].date} • {sermons[0].duration}</Text>
+              <Text style={styles.seriesTag}>{sermon.category}</Text>
+
               <View style={styles.sermonActions}>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => openYouTube(sermon.youtube_video_id)} >
                   <Play size={20} color="#FFFFFF" />
                   <Text style={styles.actionText}>Play</Text>
                 </TouchableOpacity>
