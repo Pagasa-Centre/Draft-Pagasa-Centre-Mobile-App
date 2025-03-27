@@ -25,7 +25,7 @@ export default function MinistriesScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/v1/ministry') // 👈 Replace with your actual IP on device or Railway URL
+    fetch('http://192.168.0.195:8080/api/v1/ministry') // 👈 Replace with your actual IP on device or Railway URL
         .then(res => res.json())
         .then(data => {
           setMinistries(data.ministries);

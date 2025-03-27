@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking, ActivityIndicator } from 'react-native';
 import { Play, Bookmark, Share2 } from 'lucide-react-native';
 import axios from 'axios';
+import { useRouter } from 'expo-router';
+
+
 
 type MediaItem = {
   id: number;
@@ -45,9 +48,22 @@ const sermons = [
 const categories = ['All', 'Sunday Preachings', 'Bible Study', 'Evangelistic Nights'];
 
 export default function MediaScreen() {
+  const router = useRouter(); // ✅ Correct spot for useRouter
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const goToDetail = (item: MediaItem) => {
+    router.push({
+      pathname: '/media/detail',
+      params: {
+        videoId: item.youtube_video_id,
+        title: item.title,
+        description: item.description,
+        category: item.category,
+      },
+    });
+  };
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -68,9 +84,7 @@ export default function MediaScreen() {
       ? media
       : media.filter(item => item.category === selectedCategory);
 
-  const openYouTube = (videoId: string) => {
-    Linking.openURL(`https://www.youtube.com/watch?v=${videoId}`);
-  };
+
 
   if (loading) {
     return (
@@ -126,7 +140,7 @@ export default function MediaScreen() {
                   <Text style={styles.featuredTitle}>{featured.title}</Text>
                   <Text style={styles.featuredSubtitle}>Sunday Preachings</Text>
                 </View>
-                <TouchableOpacity style={styles.playButton} onPress={() => openYouTube(featured.youtube_video_id)}>
+                <TouchableOpacity style={styles.playButton} onPress={() => goToDetail(featured)}>
                   <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -146,7 +160,7 @@ export default function MediaScreen() {
               <Text style={styles.seriesTag}>{sermon.category}</Text>
 
               <View style={styles.sermonActions}>
-                <TouchableOpacity style={styles.actionButton} onPress={() => openYouTube(sermon.youtube_video_id)} >
+                <TouchableOpacity style={styles.actionButton} onPress={() => goToDetail(sermon)} >
                   <Play size={20} color="#FFFFFF" />
                   <Text style={styles.actionText}>Play</Text>
                 </TouchableOpacity>
