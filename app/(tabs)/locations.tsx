@@ -15,6 +15,7 @@ type Outreach = {
   phone?: string;
   coordinates?: { lat: number; lng: number };
   services?: { day: string; time: string }[]; // optional structure for service times
+  thumbnail_url:string;
 };
 
 const locations = [
@@ -90,9 +91,13 @@ export default function LocationsScreen() {
           <Text style={styles.subtitle}>Join us at a campus near you</Text>
         </View>
 
-        {outreaches.map((outreach) => (
+        {[...outreaches].sort((a, b) => {
+          if (a.name === 'Pagasa Centre Dagenham') return -1;
+          if (b.name === 'Pagasa Centre Dagenham') return 1;
+          return 0;
+        }).map((outreach) => (
             <View key={outreach.id} style={styles.locationCard}>
-              <Image source={{ uri: outreach.image }} style={styles.locationImage} />
+              <Image source={{ uri: outreach.thumbnail_url }} style={styles.locationImage} />
 
               <View style={styles.locationInfo}>
                 <Text style={styles.locationName}>{outreach.name}</Text>
