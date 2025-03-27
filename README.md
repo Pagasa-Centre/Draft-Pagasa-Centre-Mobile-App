@@ -7,8 +7,8 @@ Frontend for the Pag-Asa Centre mobile app
 
 - Docker installed on your machine.
 - Git installed on your machine.
-- Node JS
-- npm
+- Node JS installed
+- npm install
 
 ### How to run the whole application
 
