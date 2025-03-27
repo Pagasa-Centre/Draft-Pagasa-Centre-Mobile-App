@@ -1,5 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 import { MapPin, Clock, Phone, Navigation } from 'lucide-react-native';
+
+type Outreach = {
+  id: number;
+  name: string;
+  image?: string; // Optional for now
+  address_line_1: string;
+  address_line_2?: string;
+  post_code?: string;
+  city: string;
+  country: string;
+  phone?: string;
+  coordinates?: { lat: number; lng: number };
+  services?: { day: string; time: string }[]; // optional structure for service times
+};
 
 const locations = [
   {
@@ -28,72 +44,111 @@ const locations = [
 
 export default function LocationsScreen() {
   const openMaps = (lat: number, lng: number, address: string) => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    let url = '';
+    if (lat && lng) {
+      url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    } else {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    }
     Linking.openURL(url);
   };
 
-  const callLocation = (phone: string) => {
+  const callOutreach = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
   };
+  const [outreaches, setOutreaches] = useState<Outreach[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchOutreaches = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/v1/outreach/');
+      setOutreaches(response.data.outreaches); // adjust based on actual response structure
+    } catch (err) {
+      console.error('Failed to fetch outreach locations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOutreaches();
+  }, []);
+
+
+  if (loading) {
+    return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Our Locations</Text>
-        <Text style={styles.subtitle}>Join us at a campus near you</Text>
-      </View>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Our Outreaches</Text>
+          <Text style={styles.subtitle}>Join us at a campus near you</Text>
+        </View>
 
-      {locations.map((location) => (
-        <View key={location.id} style={styles.locationCard}>
-          <Image source={{ uri: location.image }} style={styles.locationImage} />
-          
-          <View style={styles.locationInfo}>
-            <Text style={styles.locationName}>{location.name}</Text>
-            
-            <View style={styles.infoRow}>
-              <MapPin size={20} color="#FFFFFF" />
-              <Text style={styles.infoText}>{location.address}</Text>
-            </View>
+        {outreaches.map((outreach) => (
+            <View key={outreach.id} style={styles.locationCard}>
+              <Image source={{ uri: outreach.image }} style={styles.locationImage} />
 
-            <View style={styles.servicesContainer}>
-              <Clock size={20} color="#FFFFFF" />
-              <View style={styles.services}>
-                {location.services.map((service, index) => (
-                  <Text key={index} style={styles.serviceText}>
-                    {service.day}: {service.time}
+              <View style={styles.locationInfo}>
+                <Text style={styles.locationName}>{outreach.name}</Text>
+
+                <View style={styles.infoRow}>
+                  <MapPin size={20} color="#FFFFFF" />
+                  <Text style={styles.infoText}>
+                    {outreach.address_line_1}
+                    {outreach.address_line_2 ? `, ${outreach.address_line_2}` : ''}
                   </Text>
-                ))}
+                </View>
+
+                <View style={styles.servicesContainer}>
+                  <Clock size={20} color="#FFFFFF" />
+                  <View style={styles.services}>
+                    {locations[0].services.map((service, index) => (
+                        <Text key={index} style={styles.serviceText}>
+                          {service.day}: {service.time}
+                        </Text>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Phone size={20} color="#FFFFFF" />
+                  <Text style={styles.infoText}>
+                    {locations[0].phone}
+                  </Text>
+                </View>
+
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                      style={styles.button}
+                      onPress={() => callOutreach(locations[0].phone)}>
+                    <Phone size={20} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>Call</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                      style={[styles.button, styles.directionsButton]}
+                      onPress={() =>
+                          openMaps(
+                              outreach.coordinates?.lat || 0,
+                              outreach.coordinates?.lng || 0,
+                              `${outreach.address_line_1}${outreach.address_line_2 ? `, ${outreach.address_line_2}` : ''}, ${outreach.city}, ${outreach.country}`
+                          )
+                      }
+                  >
+                    <Navigation size={20} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>Directions</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-
-            <View style={styles.infoRow}>
-              <Phone size={20} color="#FFFFFF" />
-              <Text style={styles.infoText}>{location.phone}</Text>
-            </View>
-
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => callLocation(location.phone)}>
-                <Phone size={20} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Call</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.button, styles.directionsButton]}
-                onPress={() => openMaps(
-                  location.coordinates.lat,
-                  location.coordinates.lng,
-                  location.address
-                )}>
-                <Navigation size={20} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Directions</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </ScrollView>
   );
 }
 

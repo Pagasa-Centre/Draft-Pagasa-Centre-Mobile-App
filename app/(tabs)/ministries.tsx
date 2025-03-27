@@ -1,59 +1,81 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
 import { Users, Music, Heart, BookOpen } from 'lucide-react-native';
 
-const ministries = [
-  {
-    id: 1,
-    name: 'Worship Ministry',
-    description: 'Join our worship team to lead the congregation in praise and worship.',
-    icon: Music,
-    requirements: ['Musical ability', 'Heart for worship', 'Commitment to rehearsals'],
-  },
-  {
-    id: 2,
-    name: 'Children\'s Ministry',
-    description: 'Help nurture the faith of our youngest members through engaging activities and Bible lessons.',
-    icon: Heart,
-    requirements: ['Love for children', 'Patient and caring', 'Background check required'],
-  },
-  {
-    id: 3,
-    name: 'Production Ministry',
-    description: 'Lead small groups in studying God\'s word and fostering spiritual growth.',
-    icon: BookOpen,
-    requirements: ['Strong biblical knowledge', 'Leadership skills', 'Regular attendance'],
-  },
-];
+const iconMap: Record<string, React.ElementType> = {
+  'Worship Ministry': Music,
+  'Children\'s Ministry': Heart,
+  'Production Ministry': BookOpen,
+  'Default': Users,
+};
+
+type Ministry = {
+  id: number;
+  outreach_id: number;
+  name: string;
+  description: string;
+  day: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  meeting_location: string;
+};
 
 export default function MinistriesScreen() {
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Our Ministries</Text>
-        <Text style={styles.subtitle}>Find your place to serve and grow</Text>
-      </View>
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      <View style={styles.ministriesList}>
-        {ministries.map((ministry) => (
-          <TouchableOpacity key={ministry.id} style={styles.ministryCard}>
-            <View style={styles.ministryHeader}>
-              <ministry.icon size={24} color="#FFFFFF" />
-              <Text style={styles.ministryName}>{ministry.name}</Text>
-            </View>
-            <Text style={styles.ministryDescription}>{ministry.description}</Text>
-            <View style={styles.requirements}>
-              <Text style={styles.requirementsTitle}>Requirements:</Text>
-              {ministry.requirements.map((req, index) => (
-                <Text key={index} style={styles.requirementItem}>• {req}</Text>
-              ))}
-            </View>
-            <TouchableOpacity style={styles.applyButton}>
-              <Text style={styles.applyButtonText}>Apply Now</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+  useEffect(() => {
+    fetch('http://localhost:8080/api/v1/ministry') // 👈 Replace with your actual IP on device or Railway URL
+        .then(res => res.json())
+        .then(data => {
+          setMinistries(data.ministries);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch ministries:', err);
+          setLoading(false);
+        });
+  }, []);
+
+  if (loading) {
+    return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+    );
+  }
+
+  return (
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Our Ministries</Text>
+          <Text style={styles.subtitle}>Find your place to serve and grow</Text>
+        </View>
+
+        <View style={styles.ministriesList}>
+          {ministries.map((ministry) => {
+            const Icon = iconMap[ministry.name] || iconMap.Default;
+
+            return (
+                <TouchableOpacity key={ministry.id} style={styles.ministryCard}>
+                  <View style={styles.ministryHeader}>
+                    <Icon size={24} color="#FFFFFF" />
+                    <Text style={styles.ministryName}>{ministry.name}</Text>
+                  </View>
+                  <Text style={styles.ministryDescription}>{ministry.description}</Text>
+                  {ministry.start_time && (
+                      <Text style={{ color: '#aaa', marginBottom: 10 }}>
+                        Meets on {ministry.day} at {ministry.start_time}
+                      </Text>
+                  )}
+                  <TouchableOpacity style={styles.applyButton}>
+                    <Text style={styles.applyButtonText}>Apply Now</Text>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
   );
 }
 
