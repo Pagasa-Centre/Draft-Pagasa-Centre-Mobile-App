@@ -50,15 +50,12 @@ export default function RegisterScreen() {
             setError('');
             const submitData = {
                 ...formData,
-                outreach_id: parseInt(formData.outreach_id),
-                cell_leader_id: formData.cell_leader_id ? parseInt(formData.cell_leader_id) : null,
-                ministry_id: formData.ministry_id ? parseInt(formData.ministry_id) : null,
                 birthday: formData.birthday.toISOString().split('T')[0],
             };
 
             const validatedData = registerSchema.parse(submitData);
             await register(validatedData);
-            router.replace('/login');
+            router.replace('/(tabs)');
         } catch (err: any) {
             setError(err.message || 'Registration failed. Please try again.');
         }

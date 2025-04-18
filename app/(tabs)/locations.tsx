@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { MapPin, Clock, Phone, Navigation } from 'lucide-react-native';
+import {API_BASE_URL, API_PORT} from "@/app/utils/auth";
 
 type Outreach = {
   id: number;
@@ -62,7 +63,7 @@ export default function LocationsScreen() {
 
   const fetchOutreaches = async () => {
     try {
-      const response = await axios.get('http://192.168.0.195:8080/api/v1/outreach/');
+      const response = await axios.get(`${API_BASE_URL}${API_PORT}/api/v1/outreach/`);
       setOutreaches(response.data.outreaches); // adjust based on actual response structure
     } catch (err) {
       console.error('Failed to fetch outreach locations:', err);

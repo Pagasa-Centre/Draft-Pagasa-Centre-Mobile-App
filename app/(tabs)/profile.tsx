@@ -9,12 +9,13 @@ import {
     Alert,
 } from 'react-native';
 import { getUser, updateProfile, logout } from '../utils/auth';
-import { UserDetailsResponse } from '../types/auth';
 import { LogOut, Save } from 'lucide-react-native';
+import {UpdateUserDetailsResponse} from "@/app/types/user";
+import {UserDetails} from "@/app/types/auth";
 
 export default function ProfileScreen() {
-    const [user, setUser] = useState<UserDetailsResponse | null>(null);
-    const [formData, setFormData] = useState<UserDetailsResponse | null>(null);
+    const [user, setUser] = useState<UserDetails | null>(null);
+    const [formData, setFormData] = useState<UserDetails | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
@@ -33,16 +34,16 @@ export default function ProfileScreen() {
         }
     }
 
-    const handleChange = (name: keyof UserDetailsResponse, value: any) => {
+    const handleChange = (name: keyof UserDetails, value: any) => {
         setFormData(prev => prev ? { ...prev, [name]: value } : prev);
     };
 
     async function handleUpdate() {
         try {
             if (!formData) return;
-            const updatedUser = await updateProfile(formData);
-            setUser(updatedUser);
-            setFormData(updatedUser);
+            const updatedUser:UpdateUserDetailsResponse = await updateProfile(formData);
+            setUser(updatedUser.user);
+            setFormData(updatedUser.user);
             setIsEditing(false);
             Alert.alert('Success', 'Profile updated successfully');
         } catch (error) {

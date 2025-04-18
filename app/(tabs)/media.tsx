@@ -3,18 +3,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking, A
 import { Play, Bookmark, Share2 } from 'lucide-react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import {API_BASE_URL, API_PORT} from "@/app/utils/auth";
+import {MediaItem} from "@/app/types/media";
 
 
 
-type MediaItem = {
-  id: number;
-  title: string;
-  description: string;
-  youtube_video_id: string;
-  category: string;
-  published_at: string;
-  thumbnail_url: string;
-};
+
 const sermons = [
   {
     id: 1,
@@ -68,7 +62,7 @@ export default function MediaScreen() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const response = await axios.get('http://192.168.0.195:8080/api/v1/media'); // Replace <YOUR-IP> if testing on device
+        const response = await axios.get(`${API_BASE_URL}${API_PORT}/api/v1/media`);
         setMedia(response.data.media || []);
       } catch (err) {
         console.error('Failed to fetch media:', err);

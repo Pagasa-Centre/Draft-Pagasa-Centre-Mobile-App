@@ -1,11 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import {LoginResponse, RegisterResponse} from "@/app/types/auth";
+import {UpdateUserDetailsResponse} from "@/app/types/user";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.195:8080';
+export const API_BASE_URL:string|undefined = process.env.EXPO_PUBLIC_API_BASE_URL;
+export const API_PORT:string|undefined = process.env.EXPO_PUBLIC_API_PORT;
+
 
 export async function login(email: string, password: string) {
     try {
-        const response = await fetch(`${API_URL}/api/v1/user/login`, {
+        const response = await fetch(`${API_BASE_URL}${API_PORT}/api/v1/user/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -13,14 +17,14 @@ export async function login(email: string, password: string) {
             body: JSON.stringify({ email, password }),
         });
 
+        const data:LoginResponse = await response.json();
+
         if (!response.ok) {
-            throw new Error('Login failed');
+            throw new Error(data.message);
         }
 
-        const data = await response.json();
-
         const token = data.token;
-        const user = data['user-details']; // <-- updated key
+        const user = data.user;
 
         if (!token || !user) {
             throw new Error('Invalid login response');
@@ -29,14 +33,13 @@ export async function login(email: string, password: string) {
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('user', JSON.stringify(user));
 
-        return { token, user };
     } catch (error) {
         throw error;
     }
 }
 export async function register(userData: any) {
     try {
-        const response = await fetch(`${API_URL}/api/v1/user/register`, {
+        const response = await fetch(`${API_BASE_URL}${API_PORT}/api/v1/user/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,12 +47,23 @@ export async function register(userData: any) {
             body: JSON.stringify(userData),
         });
 
+        const data:RegisterResponse = await response.json();
+
         if (!response.ok) {
-            throw new Error('Registration failed');
+            throw new Error(data.message);
         }
 
-        const data = await response.json();
-        return data;
+        const token = data.token;
+        const user = data.user;
+
+        if (!token || !user) {
+            throw new Error('Invalid register response');
+        }
+
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+
+
     } catch (error) {
         throw error;
     }
@@ -68,7 +82,7 @@ export async function logout() {
 export async function updateProfile(userData: any) {
     try {
         const token = await AsyncStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/v1/user/update-details`, {
+        const response = await fetch(`${API_BASE_URL}${API_PORT}/api/v1/user/update-details`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -77,13 +91,14 @@ export async function updateProfile(userData: any) {
             body: JSON.stringify(userData),
         });
 
+        const  data:UpdateUserDetailsResponse  = await response.json();
+
         if (!response.ok) {
-            throw new Error('Profile update failed');
+            throw new Error(data.message);
         }
 
-        const { data } = await response.json();
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
-        await AsyncStorage.setItem('user', JSON.stringify(data));
         return data;
     } catch (error) {
         throw error;
