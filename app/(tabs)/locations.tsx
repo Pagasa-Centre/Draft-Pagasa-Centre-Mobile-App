@@ -3,21 +3,10 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, A
 import axios from 'axios';
 import { MapPin, Clock, Phone, Navigation } from 'lucide-react-native';
 import {API_BASE_URL, API_PORT} from "@/app/utils/auth";
+import {GetAllOutreachesResponse, Outreach} from "@/app/types/locations";
+import {UpdateUserDetailsResponse} from "@/app/types/user";
 
-type Outreach = {
-  id: number;
-  name: string;
-  image?: string; // Optional for now
-  address_line_1: string;
-  address_line_2?: string;
-  post_code?: string;
-  city: string;
-  country: string;
-  phone?: string;
-  coordinates?: { lat: number; lng: number };
-  services?: { day: string; time: string }[]; // optional structure for service times
-  thumbnail_url:string;
-};
+
 
 const locations = [
   {
@@ -63,8 +52,26 @@ export default function LocationsScreen() {
 
   const fetchOutreaches = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}${API_PORT}/api/v1/outreach/`);
-      setOutreaches(response.data.outreaches); // adjust based on actual response structure
+      const response = await fetch(`${API_BASE_URL}${API_PORT}/api/v1/outreach/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const  data:GetAllOutreachesResponse  = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      if (!data.outreaches) {
+        throw new Error("Failed to retrieve Outreaches");
+      } else {
+        setOutreaches(data.outreaches);
+      }
+
+
     } catch (err) {
       console.error('Failed to fetch outreach locations:', err);
     } finally {
