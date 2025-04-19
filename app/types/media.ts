@@ -1,5 +1,10 @@
 
 
+export interface GetAllMediaResponse{
+    message:string;
+    media?:MediaItem[]
+}
+
 export type MediaItem = {
     id: number;
     title: string;

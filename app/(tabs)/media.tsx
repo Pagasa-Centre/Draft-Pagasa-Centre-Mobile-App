@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Play, Bookmark, Share2 } from 'lucide-react-native';
-import axios from 'axios';
 import { useRouter } from 'expo-router';
 import {API_BASE_URL, API_PORT} from "@/app/utils/auth";
-import {MediaItem} from "@/app/types/media";
+import {GetAllMediaResponse, MediaItem} from "@/app/types/media";
 
 
 
@@ -62,8 +61,20 @@ export default function MediaScreen() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}${API_PORT}/api/v1/media`);
-        setMedia(response.data.media || []);
+        const response = await fetch(`${API_BASE_URL}${API_PORT}/api/v1/media`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const  data:GetAllMediaResponse  = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message);
+        }
+
+        setMedia(data.media|| []);
       } catch (err) {
         console.error('Failed to fetch media:', err);
       } finally {
