@@ -18,7 +18,7 @@ export type Outreach = {
 interface Services{
     start_time:string;
     end_time:string;
-    Day:string;
+    day:string;
 }
 
 export interface GetAllOutreachesResponse{
